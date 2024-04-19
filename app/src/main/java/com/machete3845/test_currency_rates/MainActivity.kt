@@ -1,13 +1,17 @@
 package com.machete3845.test_currency_rates
 
+import android.content.DialogInterface
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +27,9 @@ class MainActivity : AppCompatActivity() {
 
 
     var paused: Boolean = false
+    var alert: AlertDialog? = null
+    var handler: Handler? = null
+
     lateinit var rv: RecyclerView
     lateinit var tv: TextView
     lateinit var pb: RelativeLayout
@@ -35,9 +42,18 @@ class MainActivity : AppCompatActivity() {
         tv = findViewById(R.id.tv_top)
         pb = findViewById(R.id.pb)
         updateData()
+
+        rv.addItemDecoration(
+            DividerItemDecoration(
+                applicationContext,
+                DividerItemDecoration.VERTICAL
+            )
+        );
     }
 
+    //Первичное обновление данных
     private fun updateData() {
+        alert?.dismiss()
         pb.visibility = View.VISIBLE
         val retrofit = Retrofit.Builder()
             .baseUrl("https://www.cbr-xml-daily.ru/")
@@ -53,6 +69,7 @@ class MainActivity : AppCompatActivity() {
                 val sdf = SimpleDateFormat("dd/MM/yyyy в HH:mm:ss")
                 val currentDate = sdf.format(Date())
                 tv.text = "Курсы валют - обновлено "+ currentDate
+                upd()
 
 
             }
@@ -60,10 +77,39 @@ class MainActivity : AppCompatActivity() {
             {
                println(e.printStackTrace())
                 pb.visibility = View.GONE
+                showAD()
+                upd()
             }
 
         }
 
+    }
+
+    // Вторичное обновление данных (с задержкой)
+    private fun upd() {
+            handler?.removeCallbacksAndMessages(null)
+            handler = Handler(Looper.getMainLooper())
+            handler?.postDelayed(
+                {
+                    if (!paused) {
+                        updateData()
+                    }
+                },
+                30000
+            )
+    }
+
+    // Показывает AlertDialog если данные не обновляются
+    private fun showAD() {
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+        builder.setMessage("К сожалению, обновить данные не получилось. Пожалуйста, проверьте подключение к интернету")
+            .setCancelable(true).setNegativeButton("Попробовать снова", DialogInterface.OnClickListener { dialogInterface, i ->
+                updateData()
+            })
+        alert?.dismiss()
+        alert = builder.create()
+        alert?.setTitle("Ошибка обновления данных")
+        alert?.show()
     }
 
 
