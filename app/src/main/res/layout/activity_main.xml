@@ -15,7 +15,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="20dp"
-        android:text="Курсы валют - обновлено 01.04.2024 в 11:30"
+        android:text="Курсы валют"
         android:textColor="@color/black"
         android:textSize="28dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -29,5 +29,31 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/tv_top"
         android:layout_marginTop="20dp" />
+
+    <RelativeLayout
+        android:id="@+id/pb"
+        android:visibility="visible"
+        android:elevation="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:alpha="0.6"
+            android:background="@color/black"
+            android:layout_height="match_parent">
+
+
+        </RelativeLayout>
+        <ProgressBar
+            android:id="@+id/progressBar1"
+            android:layout_centerInParent="true"
+            android:background="@drawable/custom_container_dark"
+            android:padding="10dp"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true" />
+    </RelativeLayout>
 
 </RelativeLayout>

@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -13,13 +15,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.text.SimpleDateFormat
+import java.util.Date
 
 
 class MainActivity : AppCompatActivity() {
 
 
+    var paused: Boolean = false
     lateinit var rv: RecyclerView
     lateinit var tv: TextView
+    lateinit var pb: RelativeLayout
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,24 +33,39 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         rv = findViewById(R.id.rv)
         tv = findViewById(R.id.tv_top)
+        pb = findViewById(R.id.pb)
         updateData()
     }
 
     private fun updateData() {
-
+        pb.visibility = View.VISIBLE
         val retrofit = Retrofit.Builder()
             .baseUrl("https://www.cbr-xml-daily.ru/")
             .addConverterFactory(GsonConverterFactory.create()).build()
 
         CoroutineScope(Dispatchers.Main).launch {
-            val api = retrofit.create(CurrApi::class.java)
-            val model = api.readJson()
-            rv.layoutManager = GridLayoutManager(applicationContext, 1)
-            rv.adapter = CurrencyAdapter(model.valute)
+            try {
+                val api = retrofit.create(CurrApi::class.java)
+                val model = api.readJson()
+                rv.layoutManager = GridLayoutManager(applicationContext, 1)
+                rv.adapter = CurrencyAdapter(model.valute)
+                pb.visibility = View.GONE
+                val sdf = SimpleDateFormat("dd/MM/yyyy в HH:mm:ss")
+                val currentDate = sdf.format(Date())
+                tv.text = "Курсы валют - обновлено "+ currentDate
+
+
+            }
+            catch (e: Exception)
+            {
+               println(e.printStackTrace())
+                pb.visibility = View.GONE
+            }
 
         }
 
     }
+
 
     class CurrencyAdapter(private val list: LinkedHashMap<String, Currency>): RecyclerView.Adapter<CurrAdVH>()
     {
@@ -76,6 +97,17 @@ class MainActivity : AppCompatActivity() {
     class CurrAdVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tv_title: TextView = itemView.findViewById(R.id.tv_curr_title)
         val tv_rate: TextView = itemView.findViewById(R.id.tv_curr_rate)
+    }
+
+    override fun onPause() {
+        paused = true
+        super.onPause()
+    }
+
+    override fun onResume() {
+        paused = false
+        updateData()
+        super.onResume()
     }
 
 }
